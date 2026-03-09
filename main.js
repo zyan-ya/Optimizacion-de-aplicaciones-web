@@ -47,11 +47,25 @@ document.addEventListener('DOMContentLoaded', () => {
         timeout = setTimeout(fetchNews, 400);
     });
 
+    // cargargar "mis fuentes"
+    function cargarFeeds() {
+    fetch("get_feeds.php")
+    .then(res => res.text())
+    .then(data => {
+        document.getElementById("feedList").innerHTML = data;
+    });
+}
+
+document.addEventListener("DOMContentLoaded", function () {
+    cargarFeeds();
+});
+
     // Cambio de ordenamiento
     sortSelect.addEventListener('change', fetchNews);
 
     // Carga inicial
     fetchNews();
+    cargarFeeds();
 
     // Añadir nuevo Feed
     document.getElementById('btnAddFeed').addEventListener('click', async () => {
@@ -73,4 +87,5 @@ document.addEventListener('DOMContentLoaded', () => {
             alert("Error al añadir el feed.");
         }
     });
+
 });

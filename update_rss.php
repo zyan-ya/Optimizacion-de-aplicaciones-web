@@ -1,41 +1,74 @@
 <?php
+error_reporting(E_ALL);
+ini_set('display_errors', 1);
 require 'db.php';
 
-// 1. Obtener las URLs de la base de datos
+// Limpiamos noticias viejas para que no se mezclen
+mysqli_query($conexion, "DELETE FROM noticias");
+
 $sql = "SELECT id, url FROM feeds";
 $result = mysqli_query($conexion, $sql);
 
 while ($row = mysqli_fetch_assoc($result)) {
     $feed_id = $row['id'];
-    $url = $row['url'];
+    $url = trim($row['url']);
 
-    // 2. Cargar el XML del RSS (Nativo)
-    // Usamos @ para ignorar errores si la URL está caída
-    $rss = @simplexml_load_file($url);
+    // Configuración para que no se bloquee por tiempo
+    $opts = [
+        "http" => [
+            "method" => "GET",
+            "header" => "User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36\r\n"
+        ]
+    ];
+    $context = stream_context_create($opts);
 
-    if ($rss) {
-        // En RSS 2.0, las noticias están en <channel><item>
-        foreach ($rss->channel->item as $item) {
+    // Intentamos bajar el archivo
+    $xml_data = @file_get_contents($url, false, $context);
+    
+    if ($xml_data === false) {
+        continue; // Si este link falla, saltamos al siguiente
+    }
 
-            $titulo = mysqli_real_escape_string($conexion, (string)$item->title);
-            $link = mysqli_real_escape_string($conexion, (string)$item->link);
-            $descripcion = mysqli_real_escape_string($conexion, strip_tags((string)$item->description));
+    // Cargamos el XML ignorando errores internos
+    $rss = @simplexml_load_string($xml_data, 'SimpleXMLElement', LIBXML_NOCDATA);
+    
+    if (!$rss || !isset($rss->channel->item)) {
+        continue; // Si el XML está mal formado, saltamos
+    }
 
-            // Convertir fecha a formato MySQL (YYYY-MM-DD HH:MM:SS)
-            $fecha_raw = (string)$item->pubDate;
-            $fecha_formateada = date('Y-m-d H:i:s', strtotime($fecha_raw));
+    foreach ($rss->channel->item as $item) {
+        $titulo = mysqli_real_escape_string($conexion, (string)$item->title);
+        $link = mysqli_real_escape_string($conexion, (string)$item->link);
+        $descripcion = mysqli_real_escape_string($conexion, strip_tags((string)$item->description));
+        $fecha_pub = date('Y-m-d H:i:s', strtotime((string)$item->pubDate));
 
-            // Categoría (algunos feeds no la traen, ponemos 'General' por defecto)
-            $categoria = isset($item->category) ? mysqli_real_escape_string($conexion, (string)$item->category) : 'General';
+        // BUSCADOR DE IMAGEN MULTI-ETIQUETA
+        $imagen_url = "";
 
-            // 3. Insertar en la DB
-            $insert = "INSERT IGNORE INTO noticias (titulo, descripcion, url_noticia, fecha_pub, categoria, feed_id) 
-                       VALUES ('$titulo', '$descripcion', '$link', '$fecha_formateada', '$categoria', $feed_id)";
-
-            mysqli_query($conexion, $insert);
+        // 1. Intentar con enclosure (National Geographic usa esto)
+        if (isset($item->enclosure)) {
+            $imagen_url = (string)$item->enclosure['url'];
+        } 
+        
+        // 2. Intentar con media:content (Yahoo Media)
+        if (empty($imagen_url)) {
+            $media = $item->children('http://search.yahoo.com/mrss/');
+            if (isset($media->content)) {
+                $imagen_url = (string)$media->content->attributes()->url;
+            }
         }
+
+        // 3. IMAGEN DE RELLENO (Si no hay foto, ponemos una de internet para que se vea Pro)
+        if (empty($imagen_url)) {
+            $imagen_url = "https://picsum.photos/400/300?random=" . rand(1, 1000);
+        }
+
+        $query = "INSERT INTO noticias (titulo, descripcion, url_noticia, imagen_url, fecha_pub, feed_id) 
+                  VALUES ('$titulo', '$descripcion', '$link', '$imagen_url', '$fecha_pub', $feed_id)";
+        
+        mysqli_query($conexion, $query);
     }
 }
 
-echo "Actualización nativa completada";
+echo "<h1>Actualización exitosa</h1><p>Se han procesado los feeds correctamente.</p>";
 ?>

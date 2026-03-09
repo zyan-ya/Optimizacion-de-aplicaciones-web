@@ -3,7 +3,8 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>RSS Feed Reader | Mi Lector Personal</title>
+  <title>RSS Reader Pro | Mi Lector de Noticias</title>
+  
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
@@ -16,7 +17,7 @@
     <a class="navbar-brand fw-bold" href="#">
       <i class="fas fa-rss-square me-2"></i> RSS Reader Pro
     </a>
-    <button class="btn btn-outline-light" id="btnUpdate">
+    <button class="btn btn-light fw-bold" id="btnUpdate">
       <i class="fas fa-sync-alt me-1"></i> Actualizar Noticias
     </button>
   </div>
@@ -24,33 +25,41 @@
 
 <div class="container">
   <div class="row">
+    
     <div class="col-md-4">
-      <div class="card shadow-sm mb-4">
-        <div class="card-header bg-white fw-bold">Configurar Feeds</div>
+      <div class="card shadow-sm border-0 mb-4" style="border-radius: 12px;">
+        <div class="card-header bg-white fw-bold border-0 pt-3">
+          <i class="fas fa-plus-circle text-primary me-2"></i>Añadir Nueva Fuente
+        </div>
         <div class="card-body">
+          <p class="text-muted small">Pega el link del RSS (ej. El País, Marca, etc.)</p>
           <div class="input-group mb-3">
             <input type="text" id="feedUrl" class="form-control" placeholder="https://ejemplo.com/rss">
             <button class="btn btn-primary" id="btnAddFeed">Añadir</button>
           </div>
+          <hr>
+          <label class="fw-bold mb-2">Mis Fuentes:</label>
           <ul class="list-group list-group-flush" id="feedList">
-          </ul>
+            </ul>
         </div>
       </div>
     </div>
 
     <div class="col-md-8">
-      <div class="card shadow-sm mb-4">
+      <div class="card shadow-sm border-0 mb-4" style="border-radius: 12px;">
         <div class="card-body">
           <div class="row g-2">
             <div class="col-md-7">
-              <input type="text" id="searchInput" class="form-control" placeholder="Buscar por título o descripción...">
+              <div class="input-group">
+                <span class="input-group-text bg-white border-end-0"><i class="fas fa-search text-muted"></i></span>
+                <input type="text" id="searchInput" class="form-control border-start-0" placeholder="Buscar en las noticias guardadas...">
+              </div>
             </div>
             <div class="col-md-5">
               <select id="sortSelect" class="form-select">
-                <option value="fecha_desc">Fecha (Más reciente)</option>
-                <option value="fecha_asc">Fecha (Más antigua)</option>
+                <option value="fecha_desc">Más recientes primero</option>
+                <option value="fecha_asc">Más antiguas</option>
                 <option value="titulo_asc">Título (A-Z)</option>
-                <option value="categoria_asc">Categoría</option>
               </select>
             </div>
           </div>
@@ -60,10 +69,11 @@
       <div id="newsContainer" class="row">
         <div class="col-12 text-center py-5">
           <div class="spinner-border text-primary" role="status"></div>
-          <p class="mt-2 text-muted">Cargando noticias...</p>
+          <p class="mt-2 text-muted">Cargando noticias de la base de datos...</p>
         </div>
       </div>
     </div>
+
   </div>
 </div>
 

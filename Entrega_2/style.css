@@ -1,0 +1,24 @@
+body {
+    font-family: 'Inter', sans-serif;
+    background-color: #f8f9fa;
+}
+
+.news-card {
+    border: none;
+    border-radius: 12px;
+    background: #fff;
+    overflow: hidden;
+    transition: none !important;
+}
+
+.news-card img {
+    width: 100%;
+    height: 200px;
+    min-height: 200px; /* Ayuda a subir un poco el Performance al estabilizar el CLS */
+    object-fit: cover;
+    display: block;
+    background-color: #e9ecef;
+}
+
+.spin { animation: fa-spin 1s infinite linear; }
+@keyframes fa-spin { from {transform: rotate(0deg);} to {transform: rotate(360deg);} }
